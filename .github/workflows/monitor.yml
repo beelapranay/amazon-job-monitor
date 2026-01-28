@@ -28,11 +28,10 @@ jobs:
           sudo apt-get install -y chromium-browser chromium-chromedriver
       
       - name: Download previous state
+        uses: actions/download-artifact@v3
         continue-on-error: true
-        run: |
-          gh release download latest -p job_count.json || echo "No previous state found"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: job-state
       
       - name: Run monitor
         env:
@@ -43,11 +42,9 @@ jobs:
           python monitor.py
       
       - name: Upload state
+        uses: actions/upload-artifact@v3
         if: always()
-        run: |
-          if [ -f job_count.json ]; then
-            gh release delete latest --yes || true
-            gh release create latest job_count.json --title "Latest State" --notes "Auto-generated"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: job-state
+          path: job_count.json
+          retention-days: 90
